@@ -25,7 +25,7 @@ using df::global::ui;
 using df::building_stockpilest;
 
 DFHACK_PLUGIN("autotrade");
-#define PLUGIN_VERSION 0.3
+#define PLUGIN_VERSION 0.4
 
 
 /*
@@ -458,7 +458,7 @@ struct trade_hook : public df::viewscreen_dwarfmodest
 
             return true;
         }
-        else if (input->count(interface_key::CUSTOM_U))
+        else if (input->count(interface_key::CUSTOM_SHIFT_U))
         {
             if (monitor.isMonitored(sp))
                 monitor.remove(sp);
@@ -491,7 +491,8 @@ struct trade_hook : public df::viewscreen_dwarfmodest
         if (can_trade())
             OutputHotkeyString(x, y, "Mark all for trade", "m", true, left_margin);
 
-        OutputToggleString(x, y, "Auto trade", "u", monitor.isMonitored(sp), true, left_margin);
+        y = 25;
+        OutputToggleString(x, y, "Auto trade", "Shift-U", monitor.isMonitored(sp), true, left_margin);
     }
 };
 

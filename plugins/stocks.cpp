@@ -32,7 +32,7 @@
 using df::global::world;
 
 DFHACK_PLUGIN("stocks");
-#define PLUGIN_VERSION 0.10
+#define PLUGIN_VERSION 0.11
 
 DFhackCExport command_result plugin_shutdown ( color_ostream &out )
 {
@@ -1374,7 +1374,7 @@ struct stocks_stockpile_hook : public df::viewscreen_dwarfmodest
         auto dims = Gui::getDwarfmodeViewDims();
         int left_margin = dims.menu_x1 + 1;
         int x = left_margin;
-        int y = 25;
+        int y = 24;
 
         OutputHotkeyString(x, y, "Show Inventory", "i", true, left_margin);
     }

@@ -134,9 +134,9 @@ void OutputToggleString(int &x, int &y, const char *text, const char *hotkey, bo
     OutputHotkeyString(x, y, text, hotkey);
     OutputString(COLOR_WHITE, x, y, ": ");
     if (state)
-        OutputString(COLOR_GREEN, x, y, "Enabled", newline, left_margin);
+        OutputString(COLOR_GREEN, x, y, "On", newline, left_margin);
     else
-        OutputString(COLOR_GREY, x, y, "Disabled", newline, left_margin);
+        OutputString(COLOR_GREY, x, y, "Off", newline, left_margin);
 }
 
 const int ascii_to_enum_offset = interface_key::STRING_A048 - '0';
