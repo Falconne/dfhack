@@ -26,7 +26,6 @@
 #include "modules/Maps.h"
 #include "modules/Units.h"
 #include "df/building_cagest.h"
-#include "df/dfhack_material_category.h"
 #include "df/ui_advmode.h"
 
 using df::global::world;
@@ -383,18 +382,6 @@ static string get_item_label(df::item *item, bool trim = false)
 
     return label;
 }
-
-static bool is_metal_item(df::item *item)
-{
-    auto imattype = item->getActualMaterial();
-    auto imatindex = item->getActualMaterialIndex();
-    auto item_mat = MaterialInfo(imattype, imatindex);
-    df::dfhack_material_category mat_mask;
-    mat_mask.bits.metal = true;
-
-    return item_mat.matches(mat_mask);
-}
-
 
 struct item_grouped_entry
 {

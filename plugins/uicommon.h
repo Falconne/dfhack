@@ -15,9 +15,11 @@
 
 #include "modules/Items.h"
 #include "modules/Screen.h"
+#include "modules/World.h"
 
 #include "df/building_stockpilest.h"
 #include "df/caravan_state.h"
+#include "df/dfhack_material_category.h"
 #include "df/enabler.h"
 #include "df/ui.h"
 #include "df/world.h"
@@ -234,9 +236,25 @@ static bool can_trade()
     return true;
 }
 
+static bool is_metal_item(df::item *item)
+{
+    auto imattype = item->getActualMaterial();
+    auto imatindex = item->getActualMaterialIndex();
+    auto item_mat = MaterialInfo(imattype, imatindex);
+    df::dfhack_material_category mat_mask;
+    mat_mask.bits.metal = true;
+
+    return item_mat.matches(mat_mask);
+}
+
+
+/*
+ * Stockpile Access
+ */
+
 class StockpileInfo {
 public:
-    StockpileInfo() : id(0)
+    StockpileInfo() : id(0), sp(nullptr)
     {
     }
 
@@ -283,6 +301,9 @@ protected:
 
     void readBuilding()
     {
+        if (!sp)
+            return;
+
         id = sp->id;
         z = sp->z;
         x1 = sp->room.x;
@@ -294,6 +315,52 @@ protected:
 private:
     int x1, x2, y1, y2, z;
 };
+
+
+class PersistentStockpileInfo : public StockpileInfo {
+public:
+    PersistentStockpileInfo(df::building_stockpilest *sp, string persistence_key) : 
+      StockpileInfo(sp), persistence_key(persistence_key)
+    {
+    }
+
+    PersistentStockpileInfo(PersistentDataItem &config, string persistence_key) : 
+        config(config), persistence_key(persistence_key)
+    {
+        id = config.ival(1);
+    }
+
+    bool load()
+    {
+        auto found = df::building::find(id);
+        if (!found || found->getType() != building_type::Stockpile)
+            return false;
+
+        sp = virtual_cast<df::building_stockpilest>(found);
+        if (!sp)
+            return false;
+
+        readBuilding();
+
+        return true;
+    }
+
+    void save()
+    {
+        config = DFHack::World::AddPersistentData(persistence_key);
+        config.ival(1) = id;
+    }
+
+    void remove()
+    {
+        DFHack::World::DeletePersistentData(config);
+    }
+
+private:
+    PersistentDataItem config;
+    string persistence_key;
+};
+
 
 
 /*

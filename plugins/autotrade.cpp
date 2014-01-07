@@ -17,7 +17,6 @@
 #include "df/ui.h"
 #include "df/mandate.h"
 #include "modules/Maps.h"
-#include "modules/World.h"
 
 using df::global::world;
 using df::global::cursor;
@@ -27,53 +26,7 @@ using df::building_stockpilest;
 DFHACK_PLUGIN("autotrade");
 #define PLUGIN_VERSION 0.4
 
-
-/*
- * Stockpile Access
- */
-
-class PersistentStockpileInfo : public StockpileInfo {
-public:
-    PersistentStockpileInfo(df::building_stockpilest *sp) : StockpileInfo(sp)
-    {
-    }
-
-    PersistentStockpileInfo(PersistentDataItem &config)
-    {
-        this->config = config;
-        id = config.ival(1);
-    }
-
-    bool load()
-    {
-        auto found = df::building::find(id);
-        if (!found || found->getType() != building_type::Stockpile)
-            return false;
-
-        sp = virtual_cast<df::building_stockpilest>(found);
-        if (!sp)
-            return false;
-
-        readBuilding();
-
-        return true;
-    }
-
-    void save()
-    {
-        config = DFHack::World::AddPersistentData("autotrade/stockpiles");
-        config.ival(1) = id;
-    }
-
-    void remove()
-    {
-        DFHack::World::DeletePersistentData(config);
-    }
-
-private:
-    PersistentDataItem config;
-};
-
+static const string PERSISTENCE_KEY = "autotrade/stockpiles";
 
 /*
  * Depot Access
@@ -347,10 +300,10 @@ public:
 
     void add(df::building_stockpilest *sp)
     {
-        auto pile = PersistentStockpileInfo(sp);
+        auto pile = PersistentStockpileInfo(sp, PERSISTENCE_KEY);
         if (pile.isValid())
         {
-            monitored_stockpiles.push_back(PersistentStockpileInfo(sp));
+            monitored_stockpiles.push_back(pile);
             monitored_stockpiles.back().save();
         }
     }
@@ -391,13 +344,13 @@ public:
     {
         monitored_stockpiles.clear();
         std::vector<PersistentDataItem> items;
-        DFHack::World::GetPersistentData(&items, "autotrade/stockpiles");
+        DFHack::World::GetPersistentData(&items, PERSISTENCE_KEY);
 
         for (auto i = items.begin(); i != items.end(); i++)
         {
-            auto pile = PersistentStockpileInfo(*i);
+            auto pile = PersistentStockpileInfo(*i, PERSISTENCE_KEY);
             if (pile.load())
-                monitored_stockpiles.push_back(PersistentStockpileInfo(pile));
+                monitored_stockpiles.push_back(pile);
             else
                 pile.remove();
         }
@@ -447,18 +400,18 @@ struct trade_hook : public df::viewscreen_dwarfmodest
         if (!sp)
             return false;
 
-        if (input->count(interface_key::CUSTOM_M))
+        if (input->count(interface_key::CUSTOM_T))
         {
             if (!can_trade())
                 return false;
 
             vector<PersistentStockpileInfo> wrapper;
-            wrapper.push_back(PersistentStockpileInfo(sp));
+            wrapper.push_back(PersistentStockpileInfo(sp, PERSISTENCE_KEY));
             mark_all_in_stockpiles(wrapper, true);
 
             return true;
         }
-        else if (input->count(interface_key::CUSTOM_SHIFT_U))
+        else if (input->count(interface_key::CUSTOM_SHIFT_T))
         {
             if (monitor.isMonitored(sp))
                 monitor.remove(sp);
@@ -489,10 +442,10 @@ struct trade_hook : public df::viewscreen_dwarfmodest
         int y = 23;
 
         if (can_trade())
-            OutputHotkeyString(x, y, "Mark all for trade", "m", true, left_margin);
+            OutputHotkeyString(x, y, "Mark all for trade", "t", true, left_margin);
 
         y = 25;
-        OutputToggleString(x, y, "Auto trade", "Shift-U", monitor.isMonitored(sp), true, left_margin);
+        OutputToggleString(x, y, "Auto trade", "Shift-T", monitor.isMonitored(sp), true, left_margin);
     }
 };
 
