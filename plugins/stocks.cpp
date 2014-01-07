@@ -1048,7 +1048,7 @@ private:
             auto item = *it;
             if (set_to_melt)
             {
-                melting_items.push_back(item);
+                insert_into_vector(melting_items, &df::item::id, item);
                 item->flags.bits.melt = true;
             }
             else
