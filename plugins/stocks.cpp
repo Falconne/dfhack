@@ -32,7 +32,7 @@
 using df::global::world;
 
 DFHACK_PLUGIN("stocks");
-#define PLUGIN_VERSION 0.10
+#define PLUGIN_VERSION 0.11
 
 DFhackCExport command_result plugin_shutdown ( color_ostream &out )
 {
@@ -1061,7 +1061,7 @@ private:
             auto item = *it;
             if (set_to_melt)
             {
-                melting_items.push_back(item);
+                insert_into_vector(melting_items, &df::item::id, item);
                 item->flags.bits.melt = true;
             }
             else
