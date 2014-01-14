@@ -18,7 +18,7 @@ using df::global::ui;
 using df::building_stockpilest;
 
 DFHACK_PLUGIN("automelt");
-#define PLUGIN_VERSION 0.1
+#define PLUGIN_VERSION 0.2
 
 static const string PERSISTENCE_KEY = "automelt/stockpiles";
 
@@ -180,15 +180,7 @@ struct melt_hook : public df::viewscreen_dwarfmodest
         if (!sp)
             return false;
 
-        /*if (input->count(interface_key::CUSTOM_M))
-        {
-            vector<PersistentStockpileInfo> wrapper;
-            wrapper.push_back(PersistentStockpileInfo(sp, PERSISTENCE_KEY));
-            mark_all_in_stockpiles(wrapper, true);
-
-            return true;
-        }
-        else*/ if (input->count(interface_key::CUSTOM_SHIFT_M))
+        if (input->count(interface_key::CUSTOM_SHIFT_M))
         {
             if (monitor.isMonitored(sp))
                 monitor.remove(sp);
@@ -216,7 +208,7 @@ struct melt_hook : public df::viewscreen_dwarfmodest
         auto dims = Gui::getDwarfmodeViewDims();
         int left_margin = dims.menu_x1 + 1;
         int x = left_margin;
-        int y = 26;
+        int y = 25;
 
         OutputToggleString(x, y, "Auto melt", "Shift-M", monitor.isMonitored(sp), true, left_margin);
     }

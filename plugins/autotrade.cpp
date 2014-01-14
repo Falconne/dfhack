@@ -400,18 +400,7 @@ struct trade_hook : public df::viewscreen_dwarfmodest
         if (!sp)
             return false;
 
-        if (input->count(interface_key::CUSTOM_T))
-        {
-            if (!can_trade())
-                return false;
-
-            vector<PersistentStockpileInfo> wrapper;
-            wrapper.push_back(PersistentStockpileInfo(sp, PERSISTENCE_KEY));
-            mark_all_in_stockpiles(wrapper, true);
-
-            return true;
-        }
-        else if (input->count(interface_key::CUSTOM_SHIFT_T))
+        if (input->count(interface_key::CUSTOM_SHIFT_T))
         {
             if (monitor.isMonitored(sp))
                 monitor.remove(sp);
@@ -439,12 +428,7 @@ struct trade_hook : public df::viewscreen_dwarfmodest
         auto dims = Gui::getDwarfmodeViewDims();
         int left_margin = dims.menu_x1 + 1;
         int x = left_margin;
-        int y = 23;
-
-        if (can_trade())
-            OutputHotkeyString(x, y, "Mark all for trade", "t", true, left_margin);
-
-        y = 25;
+        int y = 24;
         OutputToggleString(x, y, "Auto trade", "Shift-T", monitor.isMonitored(sp), true, left_margin);
     }
 };
