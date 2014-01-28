@@ -24,6 +24,7 @@ using namespace std;
 #include "df/item.h"
 #include "df/world.h"
 #include "df/general_ref.h"
+#include "uicommon.h"
 
 using namespace DFHack;
 using namespace df::enums;
@@ -33,6 +34,54 @@ using MapExtras::MapCache;
 using df::global::world;
 
 DFHACK_PLUGIN("autodump");
+
+// Stockpile interface START
+static const string PERSISTENCE_KEY = "automelt/stockpiles";
+
+/*
+static void mark_all_in_stockpiles(vector<PersistentStockpileInfo> &stockpiles, bool announce)
+{
+    std::vector<df::item*> &items = world->items.other[items_other_id::IN_PLAY];
+
+    // Precompute a bitmask with the bad flags
+    df::item_flags bad_flags;
+    bad_flags.whole = 0;
+
+#define F(x) bad_flags.bits.x = true;
+    F(dump); F(forbid); F(garbage_collect);
+    F(hostile); F(on_fire); F(rotten); F(trader);
+    F(in_building); F(construction); F(artifact);
+    F(spider_web); F(owned); F(in_job);
+#undef F
+
+    size_t marked_count = 0;
+    for (size_t i = 0; i < items.size(); i++)
+    {
+        df::item *item = items[i];
+        if (item->flags.whole & bad_flags.whole)
+            continue;
+
+        for (auto it = stockpiles.begin(); it != stockpiles.end(); it++)
+        {
+            if (!is_metal_item(item) || !it->inStockpile(item))
+                continue;
+
+            if (item->flags.bits.melt)
+                continue;
+
+            ++marked_count;
+            world->items.other[items_other_id::ANY_MELT_DESIGNATED].push_back(item);
+            item->flags.bits.melt = true;
+        }
+    }
+
+    if (marked_count)
+        Gui::showAnnouncement("Marked " + int_to_string(marked_count) + " items to melt", COLOR_GREEN, false);
+    else if (announce)
+        Gui::showAnnouncement("No more items to mark", COLOR_RED, true);
+}
+*/
+// Stockpile interface END
 
 command_result df_autodump(color_ostream &out, vector <string> & parameters);
 command_result df_autodump_destroy_here(color_ostream &out, vector <string> & parameters);

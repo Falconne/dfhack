@@ -11,6 +11,7 @@
 #include "df/ui.h"
 #include "modules/Maps.h"
 #include "modules/World.h"
+#include "df/item_quality.h"
 
 using df::global::world;
 using df::global::cursor;
@@ -21,7 +22,6 @@ DFHACK_PLUGIN("automelt");
 #define PLUGIN_VERSION 0.2
 
 static const string PERSISTENCE_KEY = "automelt/stockpiles";
-
 
 static void mark_all_in_stockpiles(vector<PersistentStockpileInfo> &stockpiles, bool announce)
 {
@@ -45,12 +45,15 @@ static void mark_all_in_stockpiles(vector<PersistentStockpileInfo> &stockpiles, 
         if (item->flags.whole & bad_flags.whole)
             continue;
 
+        if (!can_melt(item))
+            continue;
+
+        if (is_set_to_melt(item))
+            continue;
+
         for (auto it = stockpiles.begin(); it != stockpiles.end(); it++)
         {
-            if (!is_metal_item(item) || !it->inStockpile(item))
-                continue;
-
-            if (item->flags.bits.melt)
+            if (!it->inStockpile(item))
                 continue;
 
             ++marked_count;
@@ -64,7 +67,6 @@ static void mark_all_in_stockpiles(vector<PersistentStockpileInfo> &stockpiles, 
     else if (announce)
         Gui::showAnnouncement("No more items to mark", COLOR_RED, true);
 }
-
 
 /*
  * Stockpile Monitoring

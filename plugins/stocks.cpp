@@ -408,13 +408,13 @@ struct item_grouped_entry
         return entries[0];
     }
 
-    bool isMetal() const
+    bool canMelt() const
     {
         df::item *item = getFirstItem();
         if (!item)
             return false;
 
-        return is_metal_item(item);
+        return can_melt(item);
     }
 
     bool isSetToMelt() const
@@ -423,7 +423,7 @@ struct item_grouped_entry
         if (!item)
             return false;
 
-        return item->flags.bits.melt;
+        return is_set_to_melt(item);
     }
 
     bool contains(df::item *item) const
@@ -1028,7 +1028,7 @@ private:
         for (auto it = selected.begin(); it != selected.end(); it++)
         {
             auto item_group = *it;
-            if (!item_group->isMetal())
+            if (!item_group->canMelt())
                 continue;
 
             if (set_to_melt == -1)

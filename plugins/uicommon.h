@@ -21,6 +21,7 @@
 #include "df/caravan_state.h"
 #include "df/dfhack_material_category.h"
 #include "df/enabler.h"
+#include "df/item_quality.h"
 #include "df/ui.h"
 #include "df/world.h"
 
@@ -238,13 +239,63 @@ static bool can_trade()
 
 static bool is_metal_item(df::item *item)
 {
-    auto imattype = item->getActualMaterial();
-    auto imatindex = item->getActualMaterialIndex();
-    auto item_mat = MaterialInfo(imattype, imatindex);
-    df::dfhack_material_category mat_mask;
-    mat_mask.bits.metal = true;
+    MaterialInfo mat(item);
+    return (mat.getCraftClass() == craft_material_class::Metal);
+}
 
-    return item_mat.matches(mat_mask);
+bool is_set_to_melt(df::item* item)
+{
+    return item->flags.bits.melt;
+}
+
+// Copied from Kelly Martin's code
+bool can_melt(df::item* item)
+{
+
+    df::item_flags bad_flags;
+    bad_flags.whole = 0;
+
+#define F(x) bad_flags.bits.x = true;
+    F(dump); F(forbid); F(garbage_collect); F(in_job);
+    F(hostile); F(on_fire); F(rotten); F(trader);
+    F(in_building); F(construction); F(artifact); F(melt);
+#undef F
+
+    if (item->flags.whole & bad_flags.whole)
+        return false;
+
+    df::item_type t = item->getType();
+
+    if (t == df::enums::item_type::BOX || t == df::enums::item_type::BAR)
+        return false;
+
+    if (!is_metal_item(item)) return false;
+
+    for (auto g = item->general_refs.begin(); g != item->general_refs.end(); g++) 
+    {
+        switch ((*g)->getType()) 
+        {
+        case general_ref_type::CONTAINS_ITEM:
+        case general_ref_type::UNIT_HOLDER:
+        case general_ref_type::CONTAINS_UNIT:
+            return false;
+        case general_ref_type::CONTAINED_IN_ITEM:
+            {
+                df::item* c = (*g)->getItem();
+                for (auto gg = c->general_refs.begin(); gg != c->general_refs.end(); gg++)
+                {
+                    if ((*gg)->getType() == general_ref_type::UNIT_HOLDER)
+                        return false;
+                }
+            }
+            break;
+        }
+    }
+
+    if (item->getQuality() >= item_quality::Masterful)
+        return false;
+
+    return true;
 }
 
 
