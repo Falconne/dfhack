@@ -23,7 +23,7 @@ DFHACK_PLUGIN("automelt");
 
 static const string PERSISTENCE_KEY = "automelt/stockpiles";
 
-static void mark_all_in_stockpiles(vector<PersistentStockpileInfo> &stockpiles, bool announce)
+static void mark_all_in_stockpiles(vector<PersistentStockpileInfo> &stockpiles)
 {
     std::vector<df::item*> &items = world->items.other[items_other_id::IN_PLAY];
 
@@ -64,8 +64,6 @@ static void mark_all_in_stockpiles(vector<PersistentStockpileInfo> &stockpiles, 
 
     if (marked_count)
         Gui::showAnnouncement("Marked " + int_to_string(marked_count) + " items to melt", COLOR_GREEN, false);
-    else if (announce)
-        Gui::showAnnouncement("No more items to mark", COLOR_RED, true);
 }
 
 /*
@@ -119,7 +117,7 @@ public:
                 ++it;
         }
 
-        mark_all_in_stockpiles(monitored_stockpiles, false);
+        mark_all_in_stockpiles(monitored_stockpiles);
     }
 
     void reset()
@@ -226,7 +224,7 @@ static command_result automelt_cmd(color_ostream &out, vector <string> & paramet
     {
         if (parameters.size() == 1 && toLower(parameters[0])[0] == 'v')
         {
-            out << "Building Plan" << endl << "Version: " << PLUGIN_VERSION << endl;
+            out << "Automelt" << endl << "Version: " << PLUGIN_VERSION << endl;
         }
     }
 

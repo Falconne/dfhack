@@ -197,15 +197,10 @@ static bool is_valid_item(df::item *item)
     return true;
 }
 
-static void mark_all_in_stockpiles(vector<PersistentStockpileInfo> &stockpiles, bool announce)
+static void mark_all_in_stockpiles(vector<PersistentStockpileInfo> &stockpiles)
 {
     if (!depot_info.findDepot())
-    {
-        if (announce)
-            Gui::showAnnouncement("Cannot trade, no valid depot available", COLOR_RED, true);
-
         return;
-    }
 
     std::vector<df::item*> &items = world->items.other[items_other_id::IN_PLAY];
 
@@ -270,8 +265,6 @@ static void mark_all_in_stockpiles(vector<PersistentStockpileInfo> &stockpiles, 
 
     if (marked_count)
         Gui::showAnnouncement("Marked " + int_to_string(marked_count) + " items for trade", COLOR_GREEN, false);
-    else if (announce)
-        Gui::showAnnouncement("No more items to mark", COLOR_RED, true);
 
     if (error_count >= 5)
     {
@@ -337,7 +330,7 @@ public:
             ++it;
         }
 
-        mark_all_in_stockpiles(monitored_stockpiles, false);
+        mark_all_in_stockpiles(monitored_stockpiles);
     }
 
     void reset()

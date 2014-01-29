@@ -1028,16 +1028,19 @@ private:
         for (auto it = selected.begin(); it != selected.end(); it++)
         {
             auto item_group = *it;
-            if (!item_group->canMelt())
-                continue;
 
             if (set_to_melt == -1)
                 set_to_melt = (item_group->isSetToMelt()) ? 0 : 1;
 
-            if (set_to_melt && item_group->isSetToMelt())
+            if (set_to_melt)
+            {
+                if (!item_group->canMelt() || item_group->isSetToMelt())
+                    continue;
+            }
+            else if (!item_group->isSetToMelt())
+            {
                 continue;
-            else if (!set_to_melt && !item_group->isSetToMelt())
-                continue;
+            }
 
             items.insert(items.end(), item_group->entries.begin(), item_group->entries.end());
         }
