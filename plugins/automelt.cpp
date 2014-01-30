@@ -246,11 +246,27 @@ DFhackCExport command_result plugin_onstatechange(color_ostream &out, state_chan
     return CR_OK;
 }
 
+DFHACK_PLUGIN_IS_ENABLED(is_enabled);
+
+DFhackCExport command_result plugin_enable(color_ostream &out, bool enable)
+{
+    if (!gps)
+        return CR_FAILURE;
+
+    if (enable != is_enabled)
+    {
+        if (!INTERPOSE_HOOK(melt_hook, feed).apply(enable) ||
+            !INTERPOSE_HOOK(melt_hook, render).apply(enable))
+            return CR_FAILURE;
+
+        is_enabled = enable;
+    }
+
+    return CR_OK;
+}
+
 DFhackCExport command_result plugin_init ( color_ostream &out, std::vector <PluginCommand> &commands)
 {
-    if (!gps || !INTERPOSE_HOOK(melt_hook, feed).apply() || !INTERPOSE_HOOK(melt_hook, render).apply())
-        out.printerr("Could not insert automelt hooks!\n");
-
     commands.push_back(
         PluginCommand(
         "automelt", "Automatically flag metal items in marked stockpiles for melting.",

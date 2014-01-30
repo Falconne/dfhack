@@ -236,6 +236,25 @@ DFhackCExport command_result plugin_onstatechange(color_ostream &out, state_chan
     return CR_OK;
 }
 
+DFHACK_PLUGIN_IS_ENABLED(is_enabled);
+
+DFhackCExport command_result plugin_enable(color_ostream &out, bool enable)
+{
+    if (!gps)
+        return CR_FAILURE;
+
+    if (enable != is_enabled)
+    {
+        if (!INTERPOSE_HOOK(dump_hook, feed).apply(enable) ||
+            !INTERPOSE_HOOK(dump_hook, render).apply(enable))
+            return CR_FAILURE;
+
+        is_enabled = enable;
+    }
+
+    return CR_OK;
+}
+
 // Stockpile interface END
 
 command_result df_autodump(color_ostream &out, vector <string> & parameters);
@@ -244,9 +263,6 @@ command_result df_autodump_destroy_item(color_ostream &out, vector <string> & pa
 
 DFhackCExport command_result plugin_init ( color_ostream &out, vector <PluginCommand> &commands)
 {
-    if (!gps || !INTERPOSE_HOOK(dump_hook, feed).apply() || !INTERPOSE_HOOK(dump_hook, render).apply())
-        out.printerr("Could not insert autodump hooks!\n");
-
     commands.push_back(PluginCommand(
         "autodump", "Teleport items marked for dumping to the cursor.",
         df_autodump, false,
