@@ -38,7 +38,7 @@ using df::global::ui_build_selector;
 using df::global::world;
 
 DFHACK_PLUGIN("buildingplan");
-#define PLUGIN_VERSION 0.11
+#define PLUGIN_VERSION 0.12
 
 struct MaterialDescriptor
 {
@@ -945,7 +945,11 @@ struct buildingplan_hook : public df::viewscreen_dwarfmodest
                 }
                 return true;
             }
-            else if (input->count(interface_key::CUSTOM_P))
+            else if (input->count(interface_key::CUSTOM_P) ||
+                     input->count(interface_key::CUSTOM_F) ||
+                     input->count(interface_key::CUSTOM_Q) ||
+                     input->count(interface_key::CUSTOM_D) ||
+                     input->count(interface_key::CUSTOM_N))
             {
                 show_help = true;
             }
@@ -1091,9 +1095,7 @@ struct buildingplan_hook : public df::viewscreen_dwarfmodest
                     OutputHotkeyString(x, y, "Min Quality: ", "Q");
                     OutputString(COLOR_BROWN, x, y, filter->getMinQuality(), true, left_margin);
 
-                    OutputHotkeyString(x, y, "Decorated Only: ", "D");
-                    OutputString(COLOR_BROWN, x, y, 
-                        (filter->decorated_only) ? "Yes" : "No", true, left_margin);
+                    OutputToggleString(x, y, "Decorated Only: ", "D", filter->decorated_only, true, left_margin);
 
                     OutputHotkeyString(x, y, "Material Filter:", "M", true, left_margin);
                     auto filter_descriptions = filter->getMaterialFilterAsVector();
@@ -1131,6 +1133,7 @@ struct buildingplan_hook : public df::viewscreen_dwarfmodest
         else
         {
             planner.in_dummmy_screen = false;
+            show_help = false;
         }
     }
 };

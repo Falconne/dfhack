@@ -26,13 +26,12 @@
 #include "modules/Maps.h"
 #include "modules/Units.h"
 #include "df/building_cagest.h"
-#include "df/dfhack_material_category.h"
 #include "df/ui_advmode.h"
 
 using df::global::world;
 
 DFHACK_PLUGIN("stocks");
-#define PLUGIN_VERSION 0.11
+#define PLUGIN_VERSION 0.12
 
 DFhackCExport command_result plugin_shutdown ( color_ostream &out )
 {
@@ -384,18 +383,6 @@ static string get_item_label(df::item *item, bool trim = false)
     return label;
 }
 
-static bool is_metal_item(df::item *item)
-{
-    auto imattype = item->getActualMaterial();
-    auto imatindex = item->getActualMaterialIndex();
-    auto item_mat = MaterialInfo(imattype, imatindex);
-    df::dfhack_material_category mat_mask;
-    mat_mask.bits.metal = true;
-
-    return item_mat.matches(mat_mask);
-}
-
-
 struct item_grouped_entry
 {
     std::vector<df::item *> entries;
@@ -421,13 +408,13 @@ struct item_grouped_entry
         return entries[0];
     }
 
-    bool isMetal() const
+    bool canMelt() const
     {
         df::item *item = getFirstItem();
         if (!item)
             return false;
 
-        return is_metal_item(item);
+        return can_melt(item);
     }
 
     bool isSetToMelt() const
@@ -436,7 +423,7 @@ struct item_grouped_entry
         if (!item)
             return false;
 
-        return item->flags.bits.melt;
+        return is_set_to_melt(item);
     }
 
     bool contains(df::item *item) const
@@ -1041,16 +1028,19 @@ private:
         for (auto it = selected.begin(); it != selected.end(); it++)
         {
             auto item_group = *it;
-            if (!item_group->isMetal())
-                continue;
 
             if (set_to_melt == -1)
                 set_to_melt = (item_group->isSetToMelt()) ? 0 : 1;
 
-            if (set_to_melt && item_group->isSetToMelt())
+            if (set_to_melt)
+            {
+                if (!item_group->canMelt() || item_group->isSetToMelt())
+                    continue;
+            }
+            else if (!item_group->isSetToMelt())
+            {
                 continue;
-            else if (!set_to_melt && !item_group->isSetToMelt())
-                continue;
+            }
 
             items.insert(items.end(), item_group->entries.begin(), item_group->entries.end());
         }
@@ -1374,7 +1364,7 @@ struct stocks_stockpile_hook : public df::viewscreen_dwarfmodest
         auto dims = Gui::getDwarfmodeViewDims();
         int left_margin = dims.menu_x1 + 1;
         int x = left_margin;
-        int y = 25;
+        int y = 23;
 
         OutputHotkeyString(x, y, "Show Inventory", "i", true, left_margin);
     }

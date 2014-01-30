@@ -17,7 +17,6 @@
 #include "df/ui.h"
 #include "df/mandate.h"
 #include "modules/Maps.h"
-#include "modules/World.h"
 
 using df::global::world;
 using df::global::cursor;
@@ -25,55 +24,9 @@ using df::global::ui;
 using df::building_stockpilest;
 
 DFHACK_PLUGIN("autotrade");
-#define PLUGIN_VERSION 0.3
+#define PLUGIN_VERSION 0.4
 
-
-/*
- * Stockpile Access
- */
-
-class PersistentStockpileInfo : public StockpileInfo {
-public:
-    PersistentStockpileInfo(df::building_stockpilest *sp) : StockpileInfo(sp)
-    {
-    }
-
-    PersistentStockpileInfo(PersistentDataItem &config)
-    {
-        this->config = config;
-        id = config.ival(1);
-    }
-
-    bool load()
-    {
-        auto found = df::building::find(id);
-        if (!found || found->getType() != building_type::Stockpile)
-            return false;
-
-        sp = virtual_cast<df::building_stockpilest>(found);
-        if (!sp)
-            return false;
-
-        readBuilding();
-
-        return true;
-    }
-
-    void save()
-    {
-        config = DFHack::World::AddPersistentData("autotrade/stockpiles");
-        config.ival(1) = id;
-    }
-
-    void remove()
-    {
-        DFHack::World::DeletePersistentData(config);
-    }
-
-private:
-    PersistentDataItem config;
-};
-
+static const string PERSISTENCE_KEY = "autotrade/stockpiles";
 
 /*
  * Depot Access
@@ -244,15 +197,10 @@ static bool is_valid_item(df::item *item)
     return true;
 }
 
-static void mark_all_in_stockpiles(vector<PersistentStockpileInfo> &stockpiles, bool announce)
+static void mark_all_in_stockpiles(vector<PersistentStockpileInfo> &stockpiles)
 {
     if (!depot_info.findDepot())
-    {
-        if (announce)
-            Gui::showAnnouncement("Cannot trade, no valid depot available", COLOR_RED, true);
-
         return;
-    }
 
     std::vector<df::item*> &items = world->items.other[items_other_id::IN_PLAY];
 
@@ -317,8 +265,6 @@ static void mark_all_in_stockpiles(vector<PersistentStockpileInfo> &stockpiles, 
 
     if (marked_count)
         Gui::showAnnouncement("Marked " + int_to_string(marked_count) + " items for trade", COLOR_GREEN, false);
-    else if (announce)
-        Gui::showAnnouncement("No more items to mark", COLOR_RED, true);
 
     if (error_count >= 5)
     {
@@ -347,10 +293,10 @@ public:
 
     void add(df::building_stockpilest *sp)
     {
-        auto pile = PersistentStockpileInfo(sp);
+        auto pile = PersistentStockpileInfo(sp, PERSISTENCE_KEY);
         if (pile.isValid())
         {
-            monitored_stockpiles.push_back(PersistentStockpileInfo(sp));
+            monitored_stockpiles.push_back(pile);
             monitored_stockpiles.back().save();
         }
     }
@@ -384,20 +330,20 @@ public:
             ++it;
         }
 
-        mark_all_in_stockpiles(monitored_stockpiles, false);
+        mark_all_in_stockpiles(monitored_stockpiles);
     }
 
     void reset()
     {
         monitored_stockpiles.clear();
         std::vector<PersistentDataItem> items;
-        DFHack::World::GetPersistentData(&items, "autotrade/stockpiles");
+        DFHack::World::GetPersistentData(&items, PERSISTENCE_KEY);
 
         for (auto i = items.begin(); i != items.end(); i++)
         {
-            auto pile = PersistentStockpileInfo(*i);
+            auto pile = PersistentStockpileInfo(*i, PERSISTENCE_KEY);
             if (pile.load())
-                monitored_stockpiles.push_back(PersistentStockpileInfo(pile));
+                monitored_stockpiles.push_back(pile);
             else
                 pile.remove();
         }
@@ -447,18 +393,7 @@ struct trade_hook : public df::viewscreen_dwarfmodest
         if (!sp)
             return false;
 
-        if (input->count(interface_key::CUSTOM_M))
-        {
-            if (!can_trade())
-                return false;
-
-            vector<PersistentStockpileInfo> wrapper;
-            wrapper.push_back(PersistentStockpileInfo(sp));
-            mark_all_in_stockpiles(wrapper, true);
-
-            return true;
-        }
-        else if (input->count(interface_key::CUSTOM_U))
+        if (input->count(interface_key::CUSTOM_SHIFT_T))
         {
             if (monitor.isMonitored(sp))
                 monitor.remove(sp);
@@ -486,12 +421,8 @@ struct trade_hook : public df::viewscreen_dwarfmodest
         auto dims = Gui::getDwarfmodeViewDims();
         int left_margin = dims.menu_x1 + 1;
         int x = left_margin;
-        int y = 23;
-
-        if (can_trade())
-            OutputHotkeyString(x, y, "Mark all for trade", "m", true, left_margin);
-
-        OutputToggleString(x, y, "Auto trade", "u", monitor.isMonitored(sp), true, left_margin);
+        int y = 24;
+        OutputToggleString(x, y, "Auto trade", "Shift-T", monitor.isMonitored(sp), true, left_margin);
     }
 };
 
