@@ -19,7 +19,7 @@ using df::global::ui;
 using df::building_stockpilest;
 
 DFHACK_PLUGIN("automelt");
-#define PLUGIN_VERSION 0.2
+#define PLUGIN_VERSION 0.3
 
 static const string PERSISTENCE_KEY = "automelt/stockpiles";
 
@@ -51,13 +51,14 @@ static void mark_all_in_stockpiles(vector<PersistentStockpileInfo> &stockpiles)
         if (is_set_to_melt(item))
             continue;
 
+        auto &melting_items = world->items.other[items_other_id::ANY_MELT_DESIGNATED];
         for (auto it = stockpiles.begin(); it != stockpiles.end(); it++)
         {
             if (!it->inStockpile(item))
                 continue;
 
             ++marked_count;
-            world->items.other[items_other_id::ANY_MELT_DESIGNATED].push_back(item);
+            insert_into_vector(melting_items, &df::item::id, item);
             item->flags.bits.melt = true;
         }
     }
