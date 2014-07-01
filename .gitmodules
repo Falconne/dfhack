@@ -1,6 +1,7 @@
 [submodule "plugins/stonesense"]
 	path = plugins/stonesense
-	url = git://github.com/DFHack/stonesense.git
+	url = git://github.com/Falconne/stonesense.git
+    branch = GUI_WIP
 [submodule "plugins/isoworld"]
 	path = plugins/isoworld
 	url = git://github.com/DFHack/isoworld.git
